@@ -1,0 +1,130 @@
+package com.rajapps.otplogin.auth
+
+import android.content.Intent
+import android.content.SharedPreferences
+import android.os.Bundle
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthOptions
+import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.firestore
+import com.rajapps.otplogin.R
+import com.rajapps.otplogin.Utils
+import com.rajapps.otplogin.databinding.ActivityLoginBinding
+import java.util.concurrent.TimeUnit
+
+class LoginActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityLoginBinding
+
+    private lateinit var preferences: SharedPreferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+
+
+
+        preferences = this.getSharedPreferences("users", MODE_PRIVATE) //
+        loadUserNumber()
+
+        binding.gotoSignUpBtn.setOnClickListener {
+            openSignup() // opening signup Activity
+        }
+
+        Utils.getCorrectUserPhoneNumberSize(
+            this@LoginActivity,
+            binding.etUserNumber,
+            binding.logInBtn
+        )
+
+        binding.logInBtn.setOnClickListener {
+            validateUser()
+
+        }
+
+
+    }
+
+    private fun validateUser() {
+        val number = binding.etUserNumber.text.toString()
+        if (binding.etUserNumber.text!!.isEmpty() || number.length != 10) {
+            Utils.showToast(this, "Please fill all fields")
+
+        } else {
+            sendOtp(number)
+        }
+    }
+
+    private fun sendOtp(number: String) {
+        Utils.showDialog(this, "Sending OTP...")
+
+        val options = PhoneAuthOptions.newBuilder(FirebaseAuth.getInstance())
+            .setPhoneNumber("+91$number") // Phone number to verify
+            .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+            .setActivity(this) // Activity (for callback binding)
+            .setCallbacks(callbacks) // OnVerificationStateChangedCallbacks
+            .build()
+        PhoneAuthProvider.verifyPhoneNumber(options)
+
+    }
+
+    val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+
+        }
+
+        override fun onVerificationFailed(e: FirebaseException) {
+
+        }
+
+        override fun onCodeSent(
+            verificationId: String,
+            token: PhoneAuthProvider.ForceResendingToken,
+        ) {
+            Utils.hideDialog()
+            Utils.showToast(this@LoginActivity, "OTP sent")
+            val intent = Intent(this@LoginActivity, OTPActivity::class.java)
+            intent.putExtra("verificationId", verificationId)
+            intent.putExtra("number", binding.etUserNumber.text.toString())
+            startActivity(intent)
+            finish()
+        }
+    }
+
+
+    private fun openSignup() {
+        startActivity(Intent(this, RegisterActivity::class.java))
+        finish()
+    }
+
+
+    private fun loadUserNumber() {
+
+
+        Firebase.firestore.collection("users")
+            .document(preferences.getString("number", "9786567545")!!)
+            .get().addOnSuccessListener {
+
+                binding.etUserNumber.setText(it.getString("userPhoneNumber"))
+
+            }.addOnFailureListener {
+
+                Utils.showToast(this@LoginActivity, "Something went wrong")
+            }
+    }
+
+}

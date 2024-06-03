@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "700258497328",
+    "project_id": "otp-login-e7536",
+    "storage_bucket": "otp-login-e7536.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:700258497328:android:9939d358c36cf598128ef5",
+        "android_client_info": {
+          "package_name": "com.rajapps.otplogin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDG4OFmYk_7xkGBh-vmmPIWw9TV6Fw_I0E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
